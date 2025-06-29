@@ -1,5 +1,5 @@
 "use client";
-import { useMotionValueEvent, useScroll, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { type NextPage } from "next";
 import React from "react";
 import { HideableInput, Input } from "ui/input";
