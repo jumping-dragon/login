@@ -18,24 +18,6 @@ export async function middleware(request: NextRequest) {
   if (!process.env.ZITADEL_API_URL || !process.env.ZITADEL_SERVICE_USER_TOKEN) {
     return NextResponse.next();
   }
-    console.log("Middleware triggered for:", request.nextUrl);
-
-  if (request.nextUrl.pathname === "/.well-known/openid-configuration") {
-    // Rewrite the request to the service URL
-    const { serviceUrl } = getServiceUrlFromHeaders(await headers());
-    console.log("Rewriting to service URL:", serviceUrl);
-    request.nextUrl.href = `${serviceUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
-    return NextResponse.rewrite(request.nextUrl);
-  }
-
-  if (request.nextUrl.pathname === "/oauth/v2/authorize") {
-    // Rewrite the request to the service URL
-    const { serviceUrl } = getServiceUrlFromHeaders(await headers());
-    console.log("Rewriting to service URL:", serviceUrl);
-    request.nextUrl.href = `${serviceUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
-    return NextResponse.rewrite(request.nextUrl);
-  }
-
 
   const _headers = await headers();
 
