@@ -122,3 +122,40 @@ export async function createServiceForHost<T extends ServiceClass>(
 
   return createClientFor<T>(service)(transport);
 }
+
+export async function createServiceForHostWithUserToken<T extends ServiceClass>(
+  service: T,
+  serviceUrl: string,
+  token: string
+) {
+  if (!serviceUrl) {
+    throw new Error("No instance url found");
+  }
+
+  if (!token) {
+    throw new Error("No token found");
+  }
+
+  const transport = createServerTransport(token, {
+    baseUrl: serviceUrl,
+    interceptors: !process.env.CUSTOM_REQUEST_HEADERS
+      ? undefined
+      : [
+          (next) => {
+            return (req) => {
+              process.env.CUSTOM_REQUEST_HEADERS?.split(",").forEach(
+                (header) => {
+                  const kv = header.split(":");
+                  if (kv[0] && kv[1] !== undefined) {
+                    req.header.set(kv[0], kv[1]);
+                  }
+                }
+              );
+              return next(req);
+            };
+          },
+        ],
+  });
+
+  return createClientFor<T>(service)(transport);
+}

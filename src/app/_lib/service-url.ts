@@ -1,5 +1,5 @@
 import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 /**
  * Extracts the service url and region from the headers if used in a multitenant context (host, x-zitadel-forward-host header)
@@ -13,7 +13,7 @@ import { NextRequest } from "next/server";
 export function getServiceUrlFromHeaders(headers: ReadonlyHeaders): {
   serviceUrl: string;
 } {
-  let instanceUrl;
+  let instanceUrl: string | undefined = undefined;
 
   const forwardedHost = headers.get("x-zitadel-forward-host");
   // use the forwarded host if available (multitenant), otherwise fall back to the host of the deployment itself
