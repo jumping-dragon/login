@@ -5,9 +5,9 @@ import { getServiceUrlFromHeaders } from "lib/service-url";
 
 export const config = {
   matcher: [
-    "/.well-known/:path*",
-    "/oauth/:path*",
-    "/oidc/:path*",
+    // Exclude openid-configuration — handled by route handler which rewrites endpoint URLs
+    "/.well-known/((?!openid-configuration).*)",
+    // /oauth and /oidc handled by route handlers to avoid x-middleware-rewrite exposing Zitadel URL
     "/idps/callback/:path*",
     "/saml/:path*",
   ],
@@ -39,13 +39,14 @@ export async function middleware(request: NextRequest) {
 
   const instanceHost = `${serviceUrl}`
     .replace("https://", "")
-    .replace("http://", "");
+    .replace("http://", "")
+    .replace(/\/$/, "");
 
   const requestHeaders = new Headers(request.headers);
 
   // this is a workaround for the next.js server not forwarding the host header
   // requestHeaders.set("x-zitadel-forwarded", `host="${request.nextUrl.host}"`);
-  requestHeaders.set("x-zitadel-public-host", `${request.nextUrl.host}`);
+  requestHeaders.set("x-zitadel-public-host", instanceHost);
 
   // this is a workaround for the next.js server not forwarding the host header
   requestHeaders.set("x-zitadel-instance-host", instanceHost);
