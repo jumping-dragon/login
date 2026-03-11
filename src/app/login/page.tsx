@@ -88,7 +88,7 @@ const LoginForm = ({ className, ...props }: React.HTMLProps<HTMLDivElement>) => 
 const LoginPage: NextPage = () => {
   return (
     <div className="h-screen w-screen sm:flex bg-neutral-950">
-      <AuroraBackground mainClassName="w-full sm:w-1/2 dark" className="overflow-hidden">
+      <AuroraBackground mainClassName="w-full sm:w-1/2 dark" showController>
         <div className="w-full p-5 md:p-10 lg:px-20 lg:py-12 flex flex-grow flex-col">
           <h2 className="text-2xl flex items-center gap-x-2 text-white mb-5 mt-8 sm:mt-auto">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -114,7 +114,7 @@ const LoginPage: NextPage = () => {
             Defend.
           </h1>
           <LoginForm className="sm:hidden my-10"/>
-          <div className="mt-auto text-xs text-white/60">Nuscanner © 2025 TeamT5 . CONFIDENTIAL unless indicated otherwise.</div>
+          <div className="mt-auto text-xs text-white/60">ThreatReveal © 2025 TeamT5 . CONFIDENTIAL unless indicated otherwise.</div>
         </div>
       </AuroraBackground>
       <div className="hidden sm:flex relative w-1/2 flex-grow flex-col items-center justify-center antialiased">
