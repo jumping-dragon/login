@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import type { NextPage } from "next";
-import React from "react";
+import React, { Suspense } from "react";
 import { HideableInput, Input } from "ui/input";
 import { api } from "~/trpc/react";
 import { AuroraBackground } from "../_components/ui/aurora-background";
@@ -56,7 +56,7 @@ const LoginForm = ({ className, ...props }: React.HTMLProps<HTMLDivElement>) => 
         ease: "easeInOut",
       }}
       className={cn("backdrop-blur-2xl min-w-[300px] p-8 rounded-lg shadow-lg z-10 ring-1 ring-slate-500/10", className)}
-      //   className="mt-8 bg-gradient-to-br from-slate-300 to-slate-200 py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl"
+    //   className="mt-8 bg-gradient-to-br from-slate-300 to-slate-200 py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl"
     >
       <h2 className="text-xl text-white mb-4">Login</h2>
       <pre className="text-white text-sm my-2">{JSON.stringify({ password, username, authRequestId }, null, 2)}</pre>
@@ -113,12 +113,16 @@ const LoginPage: NextPage = () => {
             <br />
             Defend.
           </h1>
-          <LoginForm className="sm:hidden my-10"/>
+          <Suspense>
+            <LoginForm className="sm:hidden my-10" />
+          </Suspense>
           <div className="mt-auto text-xs text-white/60">ThreatReveal © 2025 TeamT5 . CONFIDENTIAL unless indicated otherwise.</div>
         </div>
       </AuroraBackground>
       <div className="hidden sm:flex relative w-1/2 flex-grow flex-col items-center justify-center antialiased">
-        <LoginForm />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );

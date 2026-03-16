@@ -1,0 +1,47 @@
+stages:
+  - build
+  - test
+  - push
+  - deploy
+
+build:
+  stage: build
+  image: docker:latest
+  variables:
+    IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    # Show version
+    - sed -i "s|REPLACED_DURING_BUILD|$IMAGE|g" ./src/components/VersionLogger.tsx
+    # Login w/ Gitlab CI Creds
+    - docker build --build-arg NEXT_PUBLIC_ENV=staging -t $IMAGE .
+    - docker push $IMAGE
+
+Trivy_container_scanning:
+  stage: test
+  image: alpine:3.11
+  variables:
+    GIT_STRATEGY: none
+    IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  allow_failure: true
+  before_script:
+    - export TRIVY_VERSION=${TRIVY_VERSION:-v0.69.2}
+    - apk add --no-cache curl docker-cli
+    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin ${TRIVY_VERSION}
+    - curl -sSL -o /tmp/trivy-gitlab.tpl https://github.com/aquasecurity/trivy/raw/${TRIVY_VERSION}/contrib/gitlab.tpl
+    - trivy registry login --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - trivy image --cache-dir .trivycache/ -q --disable-telemetry --format template --template "@/tmp/trivy-gitlab.tpl" -o gl-container-scanning-report.json $IMAGE
+    # - trivy image --cache-dir .trivycache/ -q --disable-telemetry --table-mode detailed $IMAGE
+    - trivy image --cache-dir .trivycache/ -q --disable-telemetry --severity CRITICAL,HIGH --table-mode detailed --exit-code 1 $IMAGE
+  cache:
+    paths:
+      - .trivycache/
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+  dependencies: []
+  only:
+    refs:
+      - branches
