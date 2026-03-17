@@ -3,7 +3,7 @@ import "~/styles/globals.css";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
-import VersionLogger from "~/components/VersionLogger";
+import VersionLogger from "~/app/_components/version-logger";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {

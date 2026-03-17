@@ -13,7 +13,7 @@ build:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     # Show version
-    - sed -i "s|REPLACED_DURING_BUILD|$IMAGE|g" ./src/components/VersionLogger.tsx
+    - sed -i "s|REPLACED_DURING_BUILD|$IMAGE|g" ./src/app/_components/version-logger.tsx
     # Login w/ Gitlab CI Creds
     - docker build --build-arg NEXT_PUBLIC_ENV=staging -t $IMAGE .
     - docker push $IMAGE
