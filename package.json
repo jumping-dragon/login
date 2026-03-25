@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "next build",
+		"build:prod": "open-next build",
 		"check": "biome check .",
 		"check:unsafe": "biome check --write --unsafe .",
 		"check:write": "biome check --write .",
@@ -42,6 +43,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@bufbuild/buf": "^1.55.1",
+		"@opennextjs/aws": "^3.9.16",
 		"@tailwindcss/postcss": "^4.0.15",
 		"@types/node": "^20.14.10",
 		"@types/react": "19.2.14",

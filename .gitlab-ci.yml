@@ -17,6 +17,44 @@ build:
     # Login w/ Gitlab CI Creds
     - docker build --build-arg NEXT_PUBLIC_ENV=staging -t $IMAGE .
     - docker push $IMAGE
+  except:
+    - tags
+
+Build Prod (OpenNext):
+  stage: build
+  image: oven/bun:latest
+  variables:
+    IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    NEXT_PUBLIC_ENV: production
+    SKIP_ENV_VALIDATION: "1"
+  script:
+    - bun install --frozen-lockfile
+    - bun run build:prod
+  artifacts:
+    paths:
+      - .open-next/
+    expire_in: 1 week
+  only:
+    refs:
+      - /^v\d+\.\d+\.\d+$/
+
+Build Dev (OpenNext):
+  stage: build
+  image: oven/bun:latest
+  variables:
+    IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    NEXT_PUBLIC_ENV: staging
+    SKIP_ENV_VALIDATION: "1"
+  script:
+    - bun install --frozen-lockfile
+    - bun run build:prod
+  artifacts:
+    paths:
+      - .open-next/
+    expire_in: 1 week
+  only:
+    refs:
+      - /^v\d+\.\d+\.\d+-dev\.\d+$/
 
 Trivy_container_scanning:
   stage: test
