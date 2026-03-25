@@ -1,7 +1,6 @@
 stages:
   - build
   - test
-  - push
   - deploy
 
 build:
@@ -17,8 +16,17 @@ build:
     # Login w/ Gitlab CI Creds
     - docker build --build-arg NEXT_PUBLIC_ENV=staging -t $IMAGE .
     - docker push $IMAGE
-  except:
-    - tags
+  only:
+    refs:
+      - branches
+    changes:
+      - src/**/*
+      - Dockerfile
+      - package.json
+      - bun.lock
+      - next.config.*
+      - public/**/*
+      - .gitlab-ci.yml
 
 Build Prod (OpenNext):
   stage: build
@@ -83,3 +91,11 @@ Trivy_container_scanning:
   only:
     refs:
       - branches
+    changes:
+      - src/**/*
+      - Dockerfile
+      - package.json
+      - bun.lock
+      - next.config.*
+      - public/**/*
+      - .gitlab-ci.yml
