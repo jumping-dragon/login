@@ -28,38 +28,33 @@ build:
       - public/**/*
       - .gitlab-ci.yml
 
-Build Prod (OpenNext):
+.open_next_build:
   stage: build
   image: oven/bun:latest
   variables:
     IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
-    NEXT_PUBLIC_ENV: production
     SKIP_ENV_VALIDATION: "1"
   script:
+    - sed -i "s|REPLACED_DURING_BUILD|$CI_COMMIT_REF_NAME|g" ./src/app/_components/version-logger.tsx
     - bun install --frozen-lockfile
     - bun run build:prod
   artifacts:
     paths:
       - .open-next/
     expire_in: 1 week
+
+Build Prod (OpenNext):
+  extends: .open_next_build
+  variables:
+    NEXT_PUBLIC_ENV: production
   only:
     refs:
       - /^v\d+\.\d+\.\d+$/
 
 Build Dev (OpenNext):
-  stage: build
-  image: oven/bun:latest
+  extends: .open_next_build
   variables:
-    IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
     NEXT_PUBLIC_ENV: staging
-    SKIP_ENV_VALIDATION: "1"
-  script:
-    - bun install --frozen-lockfile
-    - bun run build:prod
-  artifacts:
-    paths:
-      - .open-next/
-    expire_in: 1 week
   only:
     refs:
       - /^v\d+\.\d+\.\d+-dev\.\d+$/

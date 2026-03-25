@@ -1,29 +1,48 @@
-# Create T3 App
+# Threatreveal Login UI
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Custom login UI for [Zitadel](https://zitadel.com), built with Next.js and deployed to AWS via OpenNext.
 
-## What's next? How do I make an app with this?
+## Stack
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- [Next.js](https://nextjs.org) — framework
+- [tRPC](https://trpc.io) — type-safe API layer
+- [Tailwind CSS](https://tailwindcss.com) — styling
+- [Framer Motion](https://www.framer.com/motion/) — animations
+- [OpenNext](https://opennext.js.org) — AWS deployment adapter
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Development
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+```bash
+bun install
+bun dev        # starts on port 3005
+```
 
-## Learn More
+## CI/CD
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+### Branch commits
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+| Job | Trigger | What it does |
+|---|---|---|
+| `build` | Every branch commit | Builds Docker image tagged with commit SHA, pushes to registry |
+| `Trivy_container_scanning` | Every branch commit | Scans the built image for CVEs |
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Semver tags
 
-## How do I deploy this?
+Tag naming determines the target environment:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+| Tag format | Job | Environment |
+|---|---|---|
+| `vX.Y.Z` | `Build Prod (OpenNext)` | Production |
+| `vX.Y.Z-dev.N` | `Build Dev (OpenNext)` | Staging |
+
+Both jobs run `bun build:prod` (OpenNext) and publish the `.open-next/` directory as a CI artifact.
+
+**Examples:**
+
+```bash
+git tag v1.2.3        # triggers production build
+git tag v1.2.3-dev.1  # triggers staging build
+git push --tags
+```
+
+> The Docker `build` job is excluded from tag pipelines — only the OpenNext jobs run on tags.
