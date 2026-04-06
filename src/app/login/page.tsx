@@ -3,11 +3,187 @@ import { cn } from "lib/utils";
 import type { NextPage } from "next";
 import { useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
+import { Button } from "ui/button";
 import { HideableInput, Input } from "ui/input";
 import { api } from "~/trpc/react";
 import { AuroraBackground } from "../_components/ui/aurora";
 
+type LoginStep = "email" | "otp";
+
+const isValidEmail = (email: string) =>
+	/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 const LoginForm = ({ className }: { className?: string }) => {
+	const [step, setStep] = React.useState<LoginStep>("email");
+	const [loginName, setLoginName] = React.useState("");
+	const [otpCode, setOtpCode] = React.useState("");
+	const [sessionId, setSessionId] = React.useState("");
+	const [sessionToken, setSessionToken] = React.useState("");
+	const searchParams = useSearchParams();
+	const authRequestId = searchParams.get("authRequest") || "";
+
+	const requestOTP = api.post.requestOTP.useMutation({
+		onSuccess: (data) => {
+			setSessionId(data.sessionId);
+			setSessionToken(data.sessionToken);
+			setStep("otp");
+		},
+	});
+
+	const verifyOTP = api.post.verifyOTP.useMutation({
+		onSuccess: (data) => {
+			if (data.callbackUrl) {
+				window.location.href = data.callbackUrl;
+			}
+		},
+	});
+
+	const resendOTP = api.post.resendOTP.useMutation({
+		onSuccess: (data) => {
+			setSessionToken(data.sessionToken);
+		},
+	});
+
+	const handleRequestOTP = () => {
+		if (!isValidEmail(loginName)) return;
+		requestOTP.mutate({ loginName, authRequestId });
+	};
+
+	const handleVerifyOTP = () => {
+		if (!otpCode.trim()) return;
+		verifyOTP.mutate({ sessionId, sessionToken, otpCode, authRequestId });
+	};
+
+	const handleBack = () => {
+		setStep("email");
+		setOtpCode("");
+		setSessionId("");
+		setSessionToken("");
+		requestOTP.reset();
+		verifyOTP.reset();
+		resendOTP.reset();
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter") {
+			if (step === "email") handleRequestOTP();
+			else handleVerifyOTP();
+		}
+	};
+
+	const inputClass =
+		"h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30";
+
+	return (
+		<div
+			className={cn(
+				"dark z-10 flex min-w-[300px] animate-fade-in flex-col overflow-hidden rounded-xl bg-card p-6 text-card-foreground text-sm shadow-xs ring-1 ring-foreground/10 motion-reduce:animate-none",
+				className,
+			)}
+			onKeyDown={handleKeyDown}
+		>
+			{step === "email" && (
+				<>
+					<h2 className="mb-2 font-medium text-base leading-normal">
+						Log in to ThreatReveal
+					</h2>
+					<div className="space-y-4">
+						<input
+							type="email"
+							id="loginName"
+							placeholder="Enter your email"
+							value={loginName}
+							onChange={(e) => setLoginName(e.target.value)}
+							autoComplete="email"
+							className={inputClass}
+						/>
+						{requestOTP.error && (
+							<p className="text-destructive text-sm">
+								{requestOTP.error.message}
+							</p>
+						)}
+						<Button
+							type="button"
+							onClick={handleRequestOTP}
+							disabled={requestOTP.isPending || !isValidEmail(loginName)}
+							className="w-full"
+							size="lg"
+						>
+							{requestOTP.isPending ? "Sending code..." : "Continue with email"}
+						</Button>
+					</div>
+				</>
+			)}
+
+			{step === "otp" && (
+				<>
+					<div className="grid auto-rows-min gap-1">
+						<h2 className="font-medium text-base leading-normal">
+							Check your email
+						</h2>
+						<p className="text-muted-foreground text-sm">
+							We sent a verification code to your email
+						</p>
+					</div>
+					<div className="space-y-4">
+						<input
+							type="text"
+							id="otpCode"
+							inputMode="numeric"
+							maxLength={8}
+							placeholder="Enter verification code"
+							value={otpCode}
+							onChange={(e) => setOtpCode(e.target.value)}
+							autoComplete="one-time-code"
+							className={cn(inputClass, "text-center tracking-widest")}
+						/>
+						{verifyOTP.error && (
+							<p className="text-destructive text-sm">
+								{verifyOTP.error.message}
+							</p>
+						)}
+						<Button
+							type="button"
+							onClick={handleVerifyOTP}
+							disabled={verifyOTP.isPending || !otpCode.trim()}
+							className="w-full"
+							size="lg"
+						>
+							{verifyOTP.isPending ? "Verifying..." : "Verify"}
+						</Button>
+						<div className="flex items-center justify-between text-sm">
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								onClick={handleBack}
+							>
+								Use different email
+							</Button>
+							<Button
+								type="button"
+								variant="link"
+								size="sm"
+								onClick={() => resendOTP.mutate({ sessionId, sessionToken })}
+								disabled={resendOTP.isPending}
+							>
+								{resendOTP.isPending ? "Sending..." : "Resend code"}
+							</Button>
+						</div>
+						{resendOTP.isSuccess && (
+							<p className="text-center text-muted-foreground text-sm">
+								New code sent
+							</p>
+						)}
+					</div>
+				</>
+			)}
+		</div>
+	);
+};
+
+/** @deprecated Kept for rollback — original password-based login form */
+const PasswordLoginForm = ({ className }: { className?: string }) => {
 	const [username, setUsername] = React.useState("");
 	const [password, setPassword] = React.useState("");
 	const searchParams = useSearchParams();
@@ -15,32 +191,12 @@ const LoginForm = ({ className }: { className?: string }) => {
 
 	const { mutate: login, error } = api.post.login.useMutation({
 		onSuccess: (data) => {
-			console.log("Login successful:", data);
-			console.log("data.callbackUrl", data.callbackUrl);
-			if (!data.callbackUrl) {
-				console.error("No callback URL provided in login response");
-				return;
-			}
-			// Handle successful login, e.g., redirect or show a success message
+			if (!data.callbackUrl) return;
 			window.location.href = data.callbackUrl;
 		},
 	});
 
-	React.useEffect(() => {
-		if (error) {
-			console.error("Login error:", error);
-		}
-	}, [error]);
-
 	const isOpen = !!username;
-
-	const onUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setUsername(e.target.value);
-	};
-
-	const onPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setPassword(e.target.value);
-	};
 
 	return (
 		<div
@@ -50,14 +206,13 @@ const LoginForm = ({ className }: { className?: string }) => {
 			)}
 		>
 			<h2 className="mb-4 text-white text-xl">Login</h2>
-			{/* <pre className="text-white text-sm my-2">{JSON.stringify({ password, username, authRequestId }, null, 2)}</pre> */}
 			<div className="space-y-4">
 				<Input
 					type="text"
 					id="username"
 					placeholder="Enter your username"
 					value={username}
-					onChange={onUsernameChange}
+					onChange={(e) => setUsername(e.target.value)}
 					autoComplete="username"
 					className="bg-slate-900 bg-opacity-40 caret-blue-400"
 				/>
@@ -67,27 +222,18 @@ const LoginForm = ({ className }: { className?: string }) => {
 					id="password"
 					placeholder="Enter your password"
 					value={password}
-					onChange={onPasswordChange}
+					onChange={(e) => setPassword(e.target.value)}
 					autoComplete="current-password"
 					className="bg-slate-900 bg-opacity-40 caret-blue-500"
 				/>
-				<div>
-					<button
-						type="button"
-						onClick={() => {
-							login({ username, password, authRequestId });
-						}}
-						className="w-full rounded-md bg-blue-600 bg-opacity-50 px-4 py-2 font-semibold text-white transition-all duration-150 ease-out hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.97]"
-					>
-						Login
-					</button>
-					<p className="mt-2 text-gray-600 text-sm">
-						Don't have an account?{" "}
-						<a href="/register" className="text-blue-600 hover:underline">
-							Register
-						</a>
-					</p>
-				</div>
+				<button
+					type="button"
+					onClick={() => login({ username, password, authRequestId })}
+					className="w-full rounded-md bg-blue-600 bg-opacity-50 px-4 py-2 font-semibold text-white transition-all duration-150 ease-out hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.97]"
+				>
+					Continue with email
+				</button>
+				{error && <p className="text-red-400 text-sm">{error.message}</p>}
 			</div>
 		</div>
 	);
@@ -95,10 +241,10 @@ const LoginForm = ({ className }: { className?: string }) => {
 
 const LoginPage: NextPage = () => {
 	return (
-		<div className="h-screen w-screen bg-neutral-950 sm:flex">
+		<div className="dark h-screen w-screen bg-background sm:flex">
 			<AuroraBackground preset="0317" mainClassName="w-full sm:w-1/2 dark">
 				<div className="flex w-full flex-grow flex-col p-5 md:p-10 lg:px-20 lg:py-12">
-					<h2 className="mt-8 mb-5 flex items-center gap-x-2 text-2xl text-white sm:mt-auto">
+					<h2 className="mt-8 mb-5 flex items-center gap-x-2 text-2xl text-foreground sm:mt-auto">
 						<svg
 							width="15"
 							height="15"
@@ -185,7 +331,7 @@ const LoginPage: NextPage = () => {
 						</svg>
 						ThreatReveal
 					</h2>
-					<h1 className="text-5xl text-white sm:mb-40">
+					<h1 className="text-5xl text-foreground sm:mb-40">
 						Discover.
 						<br className="md:hidden" />
 						Monitor.
@@ -195,7 +341,7 @@ const LoginPage: NextPage = () => {
 					<Suspense>
 						<LoginForm className="my-10 sm:hidden" />
 					</Suspense>
-					<div className="mt-auto text-white/60 text-xs">
+					<div className="mt-auto text-muted-foreground text-xs">
 						ThreatReveal © 2025 TeamT5 . CONFIDENTIAL unless indicated
 						otherwise.
 					</div>
