@@ -11,48 +11,48 @@ import type { NextRequest } from "next/server";
  *
  */
 export function getServiceUrlFromHeaders(headers: ReadonlyHeaders): {
-  serviceUrl: string;
+	serviceUrl: string;
 } {
-  let instanceUrl: string | undefined = undefined;
+	let instanceUrl: string | undefined = undefined;
 
-  const forwardedHost = headers.get("x-zitadel-forward-host");
-  // use the forwarded host if available (multitenant), otherwise fall back to the host of the deployment itself
-  if (forwardedHost) {
-    instanceUrl = forwardedHost;
-    instanceUrl = instanceUrl.startsWith("http://")
-      ? instanceUrl
-      : `https://${instanceUrl}`;
-  } else if (process.env.ZITADEL_API_URL) {
-    instanceUrl = process.env.ZITADEL_API_URL;
-  } else {
-    const host = headers.get("host");
+	const forwardedHost = headers.get("x-zitadel-forward-host");
+	// use the forwarded host if available (multitenant), otherwise fall back to the host of the deployment itself
+	if (forwardedHost) {
+		instanceUrl = forwardedHost;
+		instanceUrl = instanceUrl.startsWith("http://")
+			? instanceUrl
+			: `https://${instanceUrl}`;
+	} else if (process.env.ZITADEL_API_URL) {
+		instanceUrl = process.env.ZITADEL_API_URL;
+	} else {
+		const host = headers.get("host");
 
-    if (host) {
-      const [hostname, port] = host.split(":");
-      if (hostname !== "localhost") {
-        instanceUrl = host.startsWith("http") ? host : `https://${host}`;
-      }
-    }
-  }
+		if (host) {
+			const [hostname, port] = host.split(":");
+			if (hostname !== "localhost") {
+				instanceUrl = host.startsWith("http") ? host : `https://${host}`;
+			}
+		}
+	}
 
-  if (!instanceUrl) {
-    throw new Error("Service URL could not be determined");
-  }
+	if (!instanceUrl) {
+		throw new Error("Service URL could not be determined");
+	}
 
-  return {
-    serviceUrl: instanceUrl,
-  };
+	return {
+		serviceUrl: instanceUrl,
+	};
 }
 
 export function constructUrl(request: NextRequest, path: string) {
-  const forwardedProto = request.headers.get("x-forwarded-proto")
-    ? `${request.headers.get("x-forwarded-proto")}:`
-    : request.nextUrl.protocol;
+	const forwardedProto = request.headers.get("x-forwarded-proto")
+		? `${request.headers.get("x-forwarded-proto")}:`
+		: request.nextUrl.protocol;
 
-  const forwardedHost =
-    request.headers.get("x-zitadel-forward-host") ??
-    request.headers.get("x-forwarded-host") ??
-    request.headers.get("host");
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  return new URL(`${basePath}${path}`, `${forwardedProto}//${forwardedHost}`);
+	const forwardedHost =
+		request.headers.get("x-zitadel-forward-host") ??
+		request.headers.get("x-forwarded-host") ??
+		request.headers.get("host");
+	const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+	return new URL(`${basePath}${path}`, `${forwardedProto}//${forwardedHost}`);
 }

@@ -5,5 +5,5 @@ import { NextResponse } from "next/server";
  * Returns 200 when the service is running and ready to accept traffic.
  */
 export function GET() {
-  return NextResponse.json({ status: "ok" });
+	return NextResponse.json({ status: "ok" });
 }

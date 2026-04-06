@@ -9,7 +9,9 @@ export const env = createEnv({
 	server: {
 		NODE_ENV: z.enum(["development", "test", "production"]),
 		ZITADEL_API_URL: z.string().url(),
-		ZITADEL_SERVICE_USER_TOKEN: z.string().min(1, "ZITADEL_SERVICE_USER_TOKEN must be set"),
+		ZITADEL_SERVICE_USER_TOKEN: z
+			.string()
+			.min(1, "ZITADEL_SERVICE_USER_TOKEN must be set"),
 		DEBUG: z.boolean().default(false),
 	},
 	/**
