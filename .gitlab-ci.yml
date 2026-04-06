@@ -84,6 +84,25 @@ Release (OpenNext):
     refs:
       - /^v\d+\.\d+\.\d+$/
 
+Deploy Infra (Login UI):
+  stage: deploy
+  needs:
+    - job: "Build Prod (OpenNext)"
+      artifacts: false
+  trigger:
+    project: networkdiscovery/t5nuscanner/infra
+    branch: main
+    strategy: depend
+  variables:
+    LOGIN_VERSION: $CI_COMMIT_REF_NAME # resolves to the tag name (e.g. v1.3.0)
+  environment:
+    name: production
+    url: https://login.threatreveal.org
+  when: manual
+  only:
+    refs:
+      - /^v\d+\.\d+\.\d+$/
+
 Trivy_container_scanning:
   stage: test
   image: alpine:3.11
