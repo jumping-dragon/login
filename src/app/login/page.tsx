@@ -23,7 +23,7 @@ const LoginForm = ({ className }: { className?: string }) => {
 	const searchParams = useSearchParams();
 	const authRequestId = searchParams.get("authRequest") || "";
 
-	const requestOTP = api.post.requestOTP.useMutation({
+	const requestOTP = api.auth.requestOTP.useMutation({
 		onSuccess: (data) => {
 			setSessionId(data.sessionId);
 			setSessionToken(data.sessionToken);
@@ -31,7 +31,7 @@ const LoginForm = ({ className }: { className?: string }) => {
 		},
 	});
 
-	const verifyOTP = api.post.verifyOTP.useMutation({
+	const verifyOTP = api.auth.verifyOTP.useMutation({
 		onSuccess: (data) => {
 			if (data.callbackUrl) {
 				window.location.href = data.callbackUrl;
@@ -39,7 +39,7 @@ const LoginForm = ({ className }: { className?: string }) => {
 		},
 	});
 
-	const resendOTP = api.post.resendOTP.useMutation({
+	const resendOTP = api.auth.resendOTP.useMutation({
 		onSuccess: (data) => {
 			setSessionToken(data.sessionToken);
 		},
@@ -75,7 +75,7 @@ const LoginForm = ({ className }: { className?: string }) => {
 	return (
 		<div
 			className={cn(
-				"dark z-10 flex min-w-[300px] animate-fade-in flex-col overflow-hidden rounded-xl bg-card p-6 text-card-foreground text-sm shadow-xs ring-1 ring-foreground/10 motion-reduce:animate-none",
+				"dark z-10 flex w-full max-w-sm animate-fade-in flex-col gap-4 overflow-hidden rounded-xl text-card-foreground motion-reduce:animate-none",
 				className,
 			)}
 			onKeyDown={handleKeyDown}

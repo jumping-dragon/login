@@ -12,7 +12,7 @@ export function PasswordLoginForm({ className }: { className?: string }) {
 	const searchParams = useSearchParams();
 	const authRequestId = searchParams.get("authRequest") || "";
 
-	const { mutate: login, error } = api.post.login.useMutation({
+	const { mutate: login, error } = api.auth.login.useMutation({
 		onSuccess: (data) => {
 			if (!data.callbackUrl) return;
 			window.location.href = data.callbackUrl;
